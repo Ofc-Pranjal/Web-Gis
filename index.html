@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Urban GIS Portal</title>
+
+  <!-- OpenLayers CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.3.0/ol.css">
+  <!-- Font Awesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Header -->
+  <div id="header">
+    <div class="header-logo">
+      <img src="assets/logo.png" alt="Manipal Logo" style="height: 50px; margin-right: 15px;">
+    </div>
+    <div class="header-title">Urban GIS Portal</div>
+  </div>
+
+  <!-- Main Container -->
+  <div id="main-container">
+    
+    <!-- Sidebar toggle button (outside sidebar for fixed positioning relative to main container) -->
+    <button id="sidebar-toggle" onclick="toggleSidebar()" title="Toggle sidebar"><i class="fas fa-bars"></i></button>
+    
+    <!-- Sidebar -->
+    <div id="sidebar">
+
+
+      <div class="menu-list">
+        <!-- Kept the exact class names and onclick for functionality to match index.js expectation -->
+        <div class="menu-item dropdown-header" onclick="toggleMenu('layerContainer', this)">
+          <div class="menu-item-left">
+            <i class="fas fa-layer-group icon"></i>
+            <span class="text">Geographic Layers</span>
+          </div>
+          <i class="fas fa-chevron-right chevron"></i>
+        </div>
+        
+        <!-- Important: This ID is used by index.js to inject layers -->
+        <div id="layerContainer" class="layer-list" style="display: none;"></div>
+
+        <div class="menu-item dropdown-header" onclick="toggleMenu('legendContainer', this)">
+          <div class="menu-item-left">
+            <i class="fas fa-list icon"></i>
+            <span class="text">Legend</span>
+          </div>
+          <i class="fas fa-chevron-right chevron"></i>
+        </div>
+        <div id="legendContainer" class="layer-list" style="display: none; padding: 15px 15px 15px 40px; color: #ddd;">
+          <div id="legendContent">No layers active.</div>
+        </div>
+
+        <div class="menu-item dropdown-header" onclick="toggleMenu('stylingContainer', this)">
+          <div class="menu-item-left">
+            <i class="fas fa-palette icon"></i>
+            <span class="text">Layer Styling</span>
+          </div>
+          <i class="fas fa-chevron-right chevron"></i>
+        </div>
+        <div id="stylingContainer" class="layer-list" style="display: none; padding: 15px 15px 15px 40px; color: #ddd; font-size: 13px;">
+          <label style="display:block; margin-bottom:5px;">Select Layer:</label>
+          <select id="styleLayerSelect" style="width:100%; margin-bottom:15px; padding:4px;">
+            <option value="">-- Choose Layer --</option>
+          </select>
+
+          <label style="display:block; margin-bottom:5px;">Color:</label>
+          <input type="color" id="styleColor" value="#ff0000" style="width:100%; margin-bottom:15px;">
+
+          <label style="display:block; margin-bottom:5px;">Line Width / Depth:</label>
+          <input type="range" id="styleWidth" min="1" max="15" value="4" style="width:100%; margin-bottom:15px;">
+
+          <label style="display:block; margin-bottom:5px;">Opacity:</label>
+          <input type="range" id="styleOpacity" min="0" max="1" step="0.1" value="1" style="width:100%; margin-bottom:15px;">
+
+          <button onclick="applyStyle()" style="width:100%; padding:6px; background:#007bff; color:white; border:none; border-radius:4px; cursor:pointer;">Apply Style</button>
+        </div>
+
+        <div class="menu-item dropdown-header" onclick="toggleMenu('measureContainer', this)">
+          <div class="menu-item-left">
+            <i class="fas fa-ruler-combined icon"></i>
+            <span class="text">Measurement</span>
+          </div>
+          <i class="fas fa-chevron-right chevron"></i>
+        </div>
+        <div id="measureContainer" class="layer-list" style="display: none; padding: 15px 15px 15px 40px; color: #ddd;">
+          <button onclick="startMeasurement('length')" style="width:100%; margin-bottom:10px; padding:6px; background:#007bff; color:white; border:none; border-radius:4px; cursor:pointer;">Measure Distance</button>
+          <button onclick="startMeasurement('area')" style="width:100%; margin-bottom:10px; padding:6px; background:#007bff; color:white; border:none; border-radius:4px; cursor:pointer;">Measure Area</button>
+          <button onclick="clearMeasurement()" style="width:100%; padding:6px; background:#dc3545; color:white; border:none; border-radius:4px; cursor:pointer;">Clear Measurements</button>
+        </div>
+
+        <div class="menu-item" onclick="toggleDataPanel()">
+          <div class="menu-item-left">
+            <i class="fas fa-table icon"></i>
+            <span class="text">Attribute Table</span>
+          </div>
+          <i class="fas fa-chevron-right chevron"></i>
+        </div>
+
+        <div class="menu-item" onclick="printMap()">
+          <div class="menu-item-left">
+            <i class="fas fa-print icon"></i>
+            <span class="text">Print / Export Map</span>
+          </div>
+          <i class="fas fa-chevron-right chevron"></i>
+        </div>
+      </div>
+
+
+    </div>
+
+    <!-- Map Area -->
+    <div id="map-wrapper">
+      
+      <!-- GPS Location Button -->
+      <button class="gps-btn" onclick="findMyLocation()" title="Find My Location">
+        <i class="fas fa-crosshairs"></i>
+      </button>
+
+      <!-- Basemap Switcher -->
+      <div class="basemap-switcher">
+        <select id="basemapSelect" onchange="switchBasemap()">
+          <option value="osm">Standard Map</option>
+          <option value="satellite">Satellite Imagery</option>
+          <option value="topo">Topographic</option>
+        </select>
+      </div>
+
+      <div class="search-overlay">
+        <input type="text" id="searchInput" placeholder="Search database or address...">
+        <button id="searchBtn"><i class="fas fa-search"></i></button>
+      </div>
+      
+      <!-- Important: This ID is used by OpenLayers -->
+      <div id="map"></div>
+      
+      <!-- Important: This ID is used by OpenLayers for popup -->
+      <div id="popup" class="ol-popup"></div>
+
+      <!-- Bottom Data Panel -->
+      <div id="data-panel" class="data-panel collapsed">
+        <div class="data-panel-header">
+          <span>Attribute Data Table</span>
+          <button onclick="toggleDataPanel()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="data-panel-content" id="data-panel-content">
+          <p style="padding:10px;">Select a layer from the dropdown below to view its data.</p>
+          <select id="dataTableLayerSelect" onchange="loadTableData()" style="margin:10px; padding:5px;">
+            <option value="">-- Select Layer --</option>
+          </select>
+          <div id="table-container" style="overflow:auto; max-height:200px;"></div>
+        </div>
+      </div>
+
+
+    </div>
+  </div>
+
+  <!-- OpenLayers, Supabase, and App Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/ol@v7.3.0/dist/ol.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/app.js"></script>
+
+
+</body>
+</html>

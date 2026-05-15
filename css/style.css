@@ -1,0 +1,422 @@
+body {
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+    }
+
+    /* Header Styling */
+    #header {
+      display: flex;
+      align-items: center;
+      height: 60px;
+      padding: 0 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      z-index: 1000;
+      background: white;
+    }
+
+    .header-logo {
+      display: flex;
+      align-items: center;
+    }
+
+    .header-logo i {
+      font-size: 30px;
+      color: #333;
+    }
+
+    .header-title {
+      flex: 1;
+      text-align: center;
+      color: #2b458b;
+      font-size: 26px;
+      font-weight: bold;
+      font-family: 'Times New Roman', Times, serif;
+      letter-spacing: 0.5px;
+    }
+
+    /* Main Container */
+    #main-container {
+      display: flex;
+      flex: 1;
+      position: relative;
+    }
+
+    /* Sidebar Styling */
+    #sidebar {
+      width: 280px;
+      background: #0f1c3f; /* Deep blue from image */
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      transition: width 0.3s ease;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 100;
+    }
+
+    #sidebar.collapsed {
+      width: 0;
+      overflow: hidden;
+    }
+
+    /* Sidebar Collapse Button */
+    #sidebar-toggle {
+      position: absolute;
+      top: 15px;
+      left: 265px; /* slightly outside sidebar */
+      width: 30px;
+      height: 30px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 50%;
+      font-size: 14px;
+      cursor: pointer;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      transition: left 0.3s ease;
+    }
+
+    #sidebar-toggle.shifted {
+      left: 15px; /* Position when collapsed */
+    }
+
+    /* Dropdowns in Sidebar */
+    .sidebar-section {
+      padding: 20px 15px 10px 15px;
+    }
+
+    .dropdown-group {
+      margin-bottom: 15px;
+    }
+
+    .dropdown-group label {
+      display: block;
+      font-size: 12px;
+      color: #8c9bba;
+      margin-bottom: 5px;
+    }
+
+    .dropdown-group select {
+      width: 100%;
+      background: #182a52;
+      color: white;
+      border: 1px solid #233a6b;
+      padding: 8px 10px;
+      border-radius: 4px;
+      font-size: 13px;
+      outline: none;
+      appearance: none;
+    }
+
+    /* Sidebar Menu */
+    .menu-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .menu-list::-webkit-scrollbar {
+      width: 5px;
+    }
+    .menu-list::-webkit-scrollbar-thumb {
+      background: #334a7a;
+    }
+
+    .menu-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      cursor: pointer;
+      font-size: 14px;
+      color: #fff;
+      transition: background 0.2s;
+    }
+
+    .menu-item:hover {
+      background: #182a52;
+    }
+
+    .menu-item-left {
+      display: flex;
+      align-items: center;
+    }
+
+    .menu-item .icon {
+      width: 25px;
+      color: #fff;
+      font-size: 16px;
+    }
+
+    .menu-item .chevron {
+      font-size: 10px;
+      color: #8c9bba;
+    }
+
+    .layer-list {
+      display: none;
+      background: #152445;
+      padding: 10px 20px 10px 45px;
+      font-size: 13px;
+    }
+    
+    .layer-list div {
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .layer-list input[type="checkbox"] {
+      cursor: pointer;
+    }
+
+    /* Visitor Counter */
+    .visitor-counter {
+      padding: 20px;
+    }
+
+    .visitor-counter button {
+      background: #00adef;
+      color: white;
+      border: none;
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    /* Map Area */
+    #map-wrapper {
+      flex: 1;
+      position: relative;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      background: #f0f0f0;
+    }
+
+    /* Floating Search */
+    .search-overlay {
+      position: absolute;
+      top: 15px;
+      left: 60px;
+      background: white;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      z-index: 10;
+      width: 300px;
+      overflow: hidden;
+    }
+
+    .search-overlay input {
+      border: none;
+      padding: 12px 15px;
+      flex: 1;
+      outline: none;
+      font-size: 14px;
+    }
+
+    .search-overlay button {
+      background: none;
+      border: none;
+      padding: 10px 15px;
+      cursor: pointer;
+      color: #555;
+    }
+
+    /* Map controls adjustments */
+    .ol-zoom {
+      top: 15px;
+      left: 15px;
+    }
+    
+    .ol-scale-line {
+      left: 15px;
+      bottom: 10px;
+      background: rgba(255,255,255,0.7);
+      color: #333;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+
+
+    /* OL Popup */
+    .ol-popup {
+      background: white;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      width: 280px;
+      max-height: 400px;
+      overflow-y: auto;
+      font-size: 13px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+      position: absolute;
+    }
+    
+    .ol-popup b {
+      display: block;
+      margin-bottom: 5px;
+      font-size: 14px;
+      color: #333;
+    }
+    
+    .ol-popup label {
+      display: block;
+      margin-top: 10px;
+      color: #555;
+      font-weight: bold;
+    }
+    
+    .ol-popup input[type="text"] {
+      width: 100%;
+      padding: 6px;
+      margin-top: 4px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+    
+    .ol-popup button {
+      margin-top: 15px;
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      width: 100%;
+      font-weight: bold;
+    }
+
+    .ol-popup::-webkit-scrollbar { width: 6px; }
+    .ol-popup::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+
+    /* GPS Button */
+    .gps-btn {
+      position: absolute;
+      top: 85px; /* Below zoom controls */
+      left: 15px;
+      background: rgba(255,255,255,0.9);
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 30px;
+      height: 30px;
+      cursor: pointer;
+      z-index: 10;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+    }
+    .gps-btn:hover { background: #eee; }
+
+    /* Basemap Switcher */
+    .basemap-switcher {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      z-index: 10;
+      background: white;
+      padding: 5px;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .basemap-switcher select {
+      border: none;
+      outline: none;
+      font-size: 13px;
+      padding: 2px 5px;
+    }
+
+    /* Bottom Data Panel */
+    .data-panel {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      z-index: 100;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+      transition: height 0.3s ease;
+      height: 250px;
+      display: flex;
+      flex-direction: column;
+    }
+    .data-panel.collapsed {
+      height: 0;
+      overflow: hidden;
+    }
+    .data-panel-header {
+      background: #0f1c3f;
+      color: white;
+      padding: 10px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+    }
+    .data-panel-header button {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+    }
+    .data-panel-content {
+      flex: 1;
+      overflow-y: auto;
+      font-size: 13px;
+    }
+    .data-panel table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .data-panel th, .data-panel td {
+      border: 1px solid #eee;
+      padding: 8px;
+      text-align: left;
+    }
+    .data-panel th {
+      background: #f8f9fa;
+      position: sticky;
+      top: 0;
+    }
+
+    /* Measurement Tooltips */
+    .ol-tooltip {
+      position: relative;
+      background: rgba(0, 0, 0, 0.7);
+      border-radius: 4px;
+      color: white;
+      padding: 4px 8px;
+      opacity: 0.8;
+      white-space: nowrap;
+      font-size: 12px;
+      cursor: default;
+      user-select: none;
+      pointer-events: none;
+    }
+    .ol-tooltip-measure {
+      opacity: 1;
+      font-weight: bold;
+    }
+    .ol-tooltip-static {
+      background-color: #ffcc33;
+      color: black;
+      border: 1px solid white;
+    }
