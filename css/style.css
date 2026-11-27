@@ -209,6 +209,146 @@ body {
       cursor: pointer;
     }
 
+    /* Grouped Layer Tree (GIS Data Model categories) */
+    #layerContainer {
+      padding: 6px 10px 10px 10px;
+    }
+
+    /* These need #id specificity to beat the generic `.layer-list div` rule above */
+    #layerContainer .layer-group {
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    #layerContainer .layer-group-header {
+      display: flex;
+      margin-bottom: 0;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #e6ebf5;
+      transition: background 0.2s;
+    }
+
+    #layerContainer .layer-group-header:hover {
+      background: #1d3161;
+    }
+
+    #layerContainer .layer-group-header .caret {
+      font-size: 9px;
+      color: #8c9bba;
+      width: 10px;
+      flex-shrink: 0;
+    }
+
+    #layerContainer .layer-group-header .group-icon {
+      font-size: 13px;
+      width: 16px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    #layerContainer .layer-group-name {
+      flex: 1;
+    }
+
+    #layerContainer .layer-group-count {
+      font-size: 10px;
+      color: #8c9bba;
+      background: #0f1c3f;
+      border: 1px solid #2b4175;
+      border-radius: 10px;
+      padding: 1px 7px;
+      flex-shrink: 0;
+    }
+
+    /* Categories with no table in the database yet */
+    #layerContainer .layer-group.unavailable .layer-group-header {
+      cursor: default;
+      opacity: 0.45;
+    }
+
+    #layerContainer .layer-group.unavailable .layer-group-header:hover {
+      background: none;
+    }
+
+    #layerContainer .layer-group.unavailable .caret {
+      visibility: hidden;
+    }
+
+    #layerContainer .layer-group-items {
+      display: none;
+      margin-bottom: 0;
+      padding: 4px 0 8px 26px;
+    }
+
+    #layerContainer .layer-group.open .layer-group-items {
+      display: block;
+    }
+
+    #layerContainer .layer-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 7px;
+    }
+
+    #layerContainer .layer-row label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      color: #cdd7e8;
+      font-size: 12.5px;
+    }
+
+    #layerContainer .layer-row label:hover {
+      color: #fff;
+    }
+
+    .swatch {
+      width: 16px;
+      height: 6px;
+      border-radius: 2px;
+      flex-shrink: 0;
+      box-shadow: 0 0 0 1px rgba(255,255,255,0.18);
+    }
+
+    /* Grouped Legend */
+    #legendContainer .legend-group {
+      display: block;
+      margin-bottom: 14px;
+    }
+
+    #legendContainer .legend-group-title {
+      display: block;
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: #8c9bba;
+      margin-bottom: 7px;
+    }
+
+    #legendContainer .legend-entry {
+      display: flex;
+      align-items: center;
+      margin-bottom: 7px;
+      font-size: 12.5px;
+    }
+
+    #legendContainer .legend-swatch {
+      margin-bottom: 0;
+      width: 25px;
+      height: 6px;
+      margin-right: 12px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
     /* Visitor Counter */
     .visitor-counter {
       padding: 20px;

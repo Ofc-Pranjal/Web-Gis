@@ -2,21 +2,93 @@ console.log("GIS APP STARTED");
 
 // supabaseUrl / supabaseKey / supabaseClient come from js/supabase-config.js
 
-// Layers
-const layerConfig = [
-  { id: "roads_2009", name: "Roads 2009" },
-  { id: "allahabad_roads_1989", name: "Roads 1989" },
-  { id: "allahabad_landused_area", name: "Landuse Area" },
-  { id: "allahabad_parcels_1989", name: "Parcels 1989" },
-  { id: "allahabad_parcels_2009", name: "Parcels 2009" },
-  { id: "allahabad_roads_2009_modified", name: "Roads Modified" },
-  { id: "allahabad_roads_2009_splitli", name: "Roads Split" },
-  { id: "allahabad_wards", name: "Wards" },
-  { id: "landused_masterplan2021", name: "Master Plan 2021" },
-  { id: "place_of_interest", name: "POI" },
-  { id: "railways", name: "Railways" },
-  { id: "river", name: "River" }
+// Layers, organised into the categories of the GIS Data Model.
+// A group with no `layers` has no table in the database yet and renders greyed out.
+const layerGroups = [
+  {
+    id: "building_footprints",
+    name: "Building Footprints",
+    icon: "fa-building",
+    color: "#4a53c4",
+    layers: []
+  },
+  {
+    id: "landuse_landcover",
+    name: "Landuse / Landcover",
+    icon: "fa-map",
+    color: "#c0a000",
+    layers: [
+      { id: "allahabad_landused_area", name: "Landuse Area", color: "#d4b106" },
+      { id: "landused_masterplan2021", name: "Master Plan 2021", color: "#6a9a2f" }
+    ]
+  },
+  {
+    id: "utilities",
+    name: "Utilities",
+    icon: "fa-plug",
+    color: "#1f7ae0",
+    layers: []
+  },
+  {
+    id: "road_network",
+    name: "Road Network",
+    icon: "fa-road",
+    color: "#8a6d00",
+    layers: [
+      { id: "roads_2009", name: "Roads 2009", color: "#e01b24", width: 4 },
+      { id: "allahabad_roads_1989", name: "Roads 1989", color: "#8a6d00" },
+      { id: "allahabad_roads_2009_modified", name: "Roads Modified", color: "#c87800" },
+      { id: "allahabad_roads_2009_splitli", name: "Roads Split", color: "#a0522d" },
+      { id: "railways", name: "Railways", color: "#444444" }
+    ]
+  },
+  {
+    id: "final_plot",
+    name: "Final Plot",
+    icon: "fa-vector-square",
+    color: "#b5179e",
+    layers: [
+      { id: "allahabad_parcels_1989", name: "Parcels 1989", color: "#b5179e" },
+      { id: "allahabad_parcels_2009", name: "Parcels 2009", color: "#7209b7" }
+    ]
+  },
+  {
+    id: "tp_boundary",
+    name: "TP Boundary",
+    icon: "fa-draw-polygon",
+    color: "#9ab973",
+    layers: []
+  },
+  {
+    id: "admin_boundary",
+    name: "Admin Boundary",
+    icon: "fa-landmark",
+    color: "#2b458b",
+    layers: [
+      { id: "allahabad_wards", name: "Wards", color: "#2b458b" }
+    ]
+  },
+  {
+    id: "natural_poi",
+    name: "Natural & POI",
+    icon: "fa-location-dot",
+    color: "#1f8fd6",
+    layers: [
+      { id: "river", name: "River", color: "#1f8fd6" },
+      { id: "place_of_interest", name: "POI", color: "#ff6b00" }
+    ]
+  },
+  {
+    id: "satellite_image",
+    name: "Satellite Image",
+    icon: "fa-satellite",
+    color: "#5b6b7f",
+    basemap: "satellite" // toggles the basemap rather than a vector layer
+  }
 ];
+
+// Flat view of every real layer, used by the loaders, legend and dropdowns.
+const layerConfig = layerGroups.flatMap(group => group.layers || []);
 
 const layers = {};
 
@@ -30,6 +102,11 @@ const basemaps = {
 function switchBasemap() {
   const selected = document.getElementById('basemapSelect').value;
   map.getLayers().setAt(0, basemaps[selected]);
+
+  // Keep the Satellite Image entry in the layer tree in sync with the dropdown.
+  const satBox = document.getElementById('basemap-satellite');
+  if (satBox) satBox.checked = (selected === 'satellite');
+  if (typeof updateLegend === 'function') updateLegend();
 }
 
 
@@ -96,26 +173,23 @@ layerConfig.forEach((item) => {
   const layer = new ol.layer.Vector({
     source: vectorSource,
     visible: false,
-    style: isRoads2009 ? new ol.style.Style({
+    style: new ol.style.Style({
       stroke: new ol.style.Stroke({
-        color: 'red',
-        width: 4
+        color: item.color,
+        width: item.width || 2
+      }),
+      fill: new ol.style.Fill({ color: item.color + '33' }),
+      image: new ol.style.Circle({
+        radius: 5,
+        fill: new ol.style.Fill({ color: item.color }),
+        stroke: new ol.style.Stroke({ color: '#fff', width: 1 })
       })
-    }) : undefined,
+    }),
     zIndex: isRoads2009 ? 999 : 1
   });
 
   layers[item.id] = layer;
   map.addLayer(layer);
-
-  const div = document.createElement("div");
-
-  div.innerHTML = `
-    <input type="checkbox" id="${item.id}">
-    <label style="cursor:pointer;" for="${item.id}">${item.name}</label>
-  `;
-
-  layerContainer.appendChild(div);
 
   const styleLayerSelect = document.getElementById('styleLayerSelect');
   if (styleLayerSelect) {
@@ -123,16 +197,76 @@ layerConfig.forEach((item) => {
     option.value = item.id;
     option.textContent = item.name;
     styleLayerSelect.appendChild(option);
-    
+
     const dtOption = option.cloneNode(true);
     document.getElementById('dataTableLayerSelect').appendChild(dtOption);
   }
+});
 
-  document.getElementById(item.id).addEventListener("change", function () {
-    layer.setVisible(this.checked);
+// Build the grouped layer tree in the sidebar.
+layerGroups.forEach(group => {
+  const hasLayers = (group.layers || []).length > 0;
+  const block = document.createElement("div");
+  block.className = "layer-group" + (hasLayers || group.basemap ? "" : " unavailable");
+
+  const rows = (group.layers || []).map(item => `
+    <div class="layer-row">
+      <input type="checkbox" id="${item.id}">
+      <label for="${item.id}">
+        <span class="swatch" style="background:${item.color}"></span>${item.name}
+      </label>
+    </div>
+  `).join('');
+
+  // The Satellite Image category drives the basemap instead of a vector layer.
+  const basemapRow = group.basemap ? `
+    <div class="layer-row">
+      <input type="checkbox" id="basemap-${group.basemap}" onchange="toggleBasemapLayer('${group.basemap}', this.checked)">
+      <label for="basemap-${group.basemap}">
+        <span class="swatch" style="background:${group.color}"></span>Satellite Imagery
+      </label>
+    </div>
+  ` : '';
+
+  block.innerHTML = `
+    <div class="layer-group-header" ${hasLayers || group.basemap ? 'onclick="toggleLayerGroup(this)"' : ''}>
+      <i class="fas fa-chevron-right caret"></i>
+      <i class="fas ${group.icon} group-icon" style="color:${group.color}"></i>
+      <span class="layer-group-name">${group.name}</span>
+      <span class="layer-group-count">${hasLayers ? group.layers.length : (group.basemap ? 1 : 'no data')}</span>
+    </div>
+    <div class="layer-group-items">${rows}${basemapRow}</div>
+  `;
+
+  layerContainer.appendChild(block);
+});
+
+// Wire the checkboxes now that every row exists in the DOM.
+layerConfig.forEach(item => {
+  const checkbox = document.getElementById(item.id);
+  if (!checkbox) return;
+  checkbox.addEventListener("change", function () {
+    layers[item.id].setVisible(this.checked);
     updateLegend();
   });
 });
+
+function toggleLayerGroup(header) {
+  const block = header.parentElement;
+  block.classList.toggle("open");
+  const caret = header.querySelector('.caret');
+  if (block.classList.contains("open")) {
+    caret.classList.replace('fa-chevron-right', 'fa-chevron-down');
+  } else {
+    caret.classList.replace('fa-chevron-down', 'fa-chevron-right');
+  }
+}
+
+function toggleBasemapLayer(name, checked) {
+  const select = document.getElementById('basemapSelect');
+  select.value = checked ? name : 'osm';
+  switchBasemap(); // also refreshes the legend
+}
 
 updateLegend();
 
@@ -188,30 +322,60 @@ function toggleMenu(id, element) {
   }
 }
 
-// Legend Feature 
+// Legend Feature — grouped by the categories of the GIS Data Model
 function updateLegend() {
   const legendContent = document.getElementById('legendContent');
   if (!legendContent) return;
 
   let html = '';
-  layerConfig.forEach(item => {
-    const layer = layers[item.id];
-    if (layer && layer.getVisible()) {
-      let color = '#3399CC';
+
+  layerGroups.forEach(group => {
+    let entries = '';
+
+    (group.layers || []).forEach(item => {
+      const layer = layers[item.id];
+      if (!layer || !layer.getVisible()) return;
+
+      // Read the live style so colours picked in "Layer Styling" show up here too.
+      let color = item.color;
       const style = layer.getStyle();
       if (style && typeof style.getStroke === 'function' && style.getStroke()) {
-         color = style.getStroke().getColor();
-      } else if (item.id === 'roads_2009') {
-         color = 'red';
+        color = style.getStroke().getColor();
       }
-      html += `
-        <div style="display:flex; align-items:center; margin-bottom:10px;">
-          <div style="width:25px; height:6px; background:${color}; margin-right:12px; border-radius:2px;"></div>
+
+      entries += `
+        <div class="legend-entry">
+          <div class="legend-swatch" style="background:${color}"></div>
           <span>${item.name}</span>
+        </div>
+      `;
+    });
+
+    // Satellite Image is active when its basemap is the one on screen.
+    if (group.basemap) {
+      const select = document.getElementById('basemapSelect');
+      if (select && select.value === group.basemap) {
+        entries += `
+          <div class="legend-entry">
+            <div class="legend-swatch" style="background:${group.color}"></div>
+            <span>Satellite Imagery</span>
+          </div>
+        `;
+      }
+    }
+
+    if (entries) {
+      html += `
+        <div class="legend-group">
+          <div class="legend-group-title">
+            <i class="fas ${group.icon}" style="color:${group.color}"></i> ${group.name}
+          </div>
+          ${entries}
         </div>
       `;
     }
   });
+
   legendContent.innerHTML = html === '' ? 'No layers active.' : html;
 }
 
