@@ -38,6 +38,36 @@ body {
       letter-spacing: 0.5px;
     }
 
+    /* Signed-in user block in the header */
+    .header-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #55637d;
+      flex-shrink: 0;
+    }
+
+    .header-user i.fa-circle-user {
+      font-size: 20px;
+      color: #8c9bba;
+    }
+
+    #logout-btn {
+      margin-left: 6px;
+      background: #0f1c3f;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 7px 12px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.2s;
+    }
+
+    #logout-btn:hover { background: #1c3160; }
+
     /* Main Container */
     #main-container {
       display: flex;

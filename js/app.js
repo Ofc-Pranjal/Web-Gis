@@ -1,10 +1,8 @@
 console.log("GIS APP STARTED");
 
-const supabaseUrl = 'https://nmywnznzyxvcyrbxwley.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5teXduem56eXh2Y3lyYnh3bGV5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg3NzM4NDcsImV4cCI6MjA5NDM0OTg0N30.YUP_uUjULYnL4w6nzWOlWeRWqWVPSs4w8Ok68yqAI_U';
-const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+// supabaseUrl / supabaseKey / supabaseClient come from js/supabase-config.js
 
-// ================= LAYER CONFIG =================
+// Layers
 const layerConfig = [
   { id: "roads_2009", name: "Roads 2009" },
   { id: "allahabad_roads_1989", name: "Roads 1989" },
@@ -22,7 +20,7 @@ const layerConfig = [
 
 const layers = {};
 
-// ================= BASEMAPS =================
+// Basemaps
 const basemaps = {
   osm: new ol.layer.Tile({ source: new ol.source.OSM({ crossOrigin: 'anonymous' }) }),
   satellite: new ol.layer.Tile({ source: new ol.source.XYZ({ url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', crossOrigin: 'anonymous' }) }),
@@ -34,7 +32,7 @@ function switchBasemap() {
   map.getLayers().setAt(0, basemaps[selected]);
 }
 
-// ================= MAP =================
+
 const map = new ol.Map({
   target: 'map',
   layers: [ basemaps.osm ],
@@ -44,7 +42,7 @@ const map = new ol.Map({
   })
 });
 
-// SCALE
+// Scale
 map.addControl(new ol.control.ScaleLine({
   units: 'metric',
   bar: true,
@@ -52,7 +50,7 @@ map.addControl(new ol.control.ScaleLine({
   text: true
 }));
 
-// ================= SUPABASE VECTOR LAYERS =================
+
 const layerContainer = document.getElementById("layerContainer");
 
 layerConfig.forEach((item) => {
@@ -62,7 +60,7 @@ layerConfig.forEach((item) => {
       fetch(`${supabaseUrl}/rest/v1/${item.id}`, {
         headers: {
           'apikey': supabaseKey,
-          'Authorization': `Bearer ${supabaseKey}`,
+          'Authorization': `Bearer ${window.authToken || supabaseKey}`,
           'Accept': 'application/geo+json'
         }
       })
@@ -138,7 +136,6 @@ layerConfig.forEach((item) => {
 
 updateLegend();
 
-// ================= POPUP =================
 const popupElement = document.getElementById('popup');
 
 const popup = new ol.Overlay({
@@ -178,7 +175,7 @@ map.on('singleclick', function (evt) {
   });
 });
 
-// ================= UI MENUS =================
+// Sidebar 
 function toggleMenu(id, element) {
   const container = document.getElementById(id);
   const icon = element.querySelector('.chevron');
@@ -191,7 +188,7 @@ function toggleMenu(id, element) {
   }
 }
 
-// ================= DYNAMIC LEGEND =================
+// Legend Feature 
 function updateLegend() {
   const legendContent = document.getElementById('legendContent');
   if (!legendContent) return;
@@ -218,7 +215,7 @@ function updateLegend() {
   legendContent.innerHTML = html === '' ? 'No layers active.' : html;
 }
 
-// ================= LAYER STYLING =================
+// Styling Features 
 function applyStyle() {
   const layerId = document.getElementById('styleLayerSelect').value;
   const color = document.getElementById('styleColor').value;
@@ -249,7 +246,7 @@ function toggleSidebar() {
   }
 }
 
-// ================= SAVE =================
+// Update and Save
 async function saveFeature() {
   if (!window.selectedFeatureId || !window.selectedLayerId) return;
   const inputs = document.querySelectorAll("#popup input");
@@ -262,16 +259,16 @@ async function saveFeature() {
   const { error } = await supabaseClient.from(window.selectedLayerId).update(updatedData).eq('id', window.selectedFeatureId);
   if (error) {
     const fallback = await supabaseClient.from(window.selectedLayerId).update(updatedData).eq('fid', window.selectedFeatureId);
-    if (fallback.error) alert("❌ Failed to update. Check console for details.");
-    else { alert("✅ Updated Successfully!"); layers[window.selectedLayerId].getSource().refresh(); popup.setPosition(undefined); }
+    if (fallback.error) alert(" Failed to update. Check console for details.");
+    else { alert(" Updated Successfully!"); layers[window.selectedLayerId].getSource().refresh(); popup.setPosition(undefined); }
   } else {
-    alert("✅ Updated Successfully!");
+    alert(" Updated Successfully!");
     layers[window.selectedLayerId].getSource().refresh();
     popup.setPosition(undefined);
   }
 }
 
-// ================= SEARCH (DEEP LOCAL + NOMINATIM) =================
+
 const searchInput = document.querySelector('.search-overlay input');
 const searchBtn = document.querySelector('.search-overlay button');
 
@@ -280,7 +277,7 @@ if (searchInput && searchBtn) {
     const query = searchInput.value.trim().toLowerCase();
     if (!query) return;
 
-    // 1. Deep Local Search
+
     let foundLocal = false;
     Object.values(layers).forEach(layer => {
       if (!layer.getVisible()) return;
@@ -303,7 +300,7 @@ if (searchInput && searchBtn) {
 
     if (foundLocal) return;
 
-    // 2. Nominatim Fallback
+    
     fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
       .then(res => res.json())
       .then(data => {
@@ -321,7 +318,7 @@ if (searchInput && searchBtn) {
   searchInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); });
 }
 
-// ================= GPS LOCATION =================
+// GPS Setup 
 const geolocation = new ol.Geolocation({
   trackingOptions: { enableHighAccuracy: true },
   projection: map.getView().getProjection()
@@ -356,7 +353,7 @@ geolocation.on('change:position', function () {
   positionFeature.setGeometry(coordinates ? new ol.geom.Point(coordinates) : null);
 });
 
-// ================= DATA TABLE =================
+// Attribute Feature 
 function toggleDataPanel() {
   document.getElementById('data-panel').classList.toggle('collapsed');
 }
@@ -384,7 +381,7 @@ function loadTableData() {
   container.innerHTML = html;
 }
 
-// ================= MEASUREMENT =================
+// Measurement Feature 
 const measureSource = new ol.source.Vector();
 const measureLayer = new ol.layer.Vector({
   source: measureSource,
@@ -464,7 +461,7 @@ function clearMeasurement() {
   map.removeInteraction(draw);
 }
 
-// ================= PRINT MAP =================
+// Print Feature 
 function printMap() {
   map.once('rendercomplete', function () {
     const mapCanvas = document.createElement('canvas');

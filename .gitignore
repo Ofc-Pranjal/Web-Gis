@@ -1,0 +1,13 @@
+# Personal documents / writeups kept in this folder but not part of the web app
+*.tex
+*.pdf
+*.aux
+*.log
+*.out
+*.synctex.gz
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

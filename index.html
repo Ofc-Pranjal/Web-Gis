@@ -1,8 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="auth-pending">
 <head>
   <meta charset="UTF-8">
   <title>Urban GIS Portal</title>
+
+  <!-- Hide the app until the session check in auth-guard.js passes -->
+  <style>html.auth-pending body { visibility: hidden; }</style>
 
   <!-- OpenLayers CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@v7.3.0/ol.css">
@@ -19,6 +22,13 @@
       <img src="assets/logo.png" alt="Manipal Logo" style="height: 50px; margin-right: 15px;">
     </div>
     <div class="header-title">Urban GIS Portal</div>
+    <div class="header-user">
+      <i class="fas fa-circle-user"></i>
+      <span id="userEmail"></span>
+      <button id="logout-btn" onclick="logout()" title="Sign out">
+        <i class="fas fa-right-from-bracket"></i> Sign Out
+      </button>
+    </div>
   </div>
 
   <!-- Main Container -->
@@ -163,6 +173,8 @@
   <!-- OpenLayers, Supabase, and App Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/ol@v7.3.0/dist/ol.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/auth-guard.js"></script>
   <script src="js/app.js"></script>
 
 

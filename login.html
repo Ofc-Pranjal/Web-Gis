@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign In &middot; Urban GIS Portal</title>
+
+  <!-- Font Awesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+
+  <div class="login-card">
+    <div class="login-brand">
+      <img src="assets/logo.png" alt="Manipal Logo">
+      <h1>Urban GIS Portal</h1>
+      <p>Sign in to access the geospatial database</p>
+    </div>
+
+    <form id="authForm" class="login-form" autocomplete="on">
+      <div class="field">
+        <label for="email">Email</label>
+        <div class="input-wrap">
+          <i class="fas fa-envelope"></i>
+          <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <div class="input-wrap">
+          <i class="fas fa-lock"></i>
+          <input type="password" id="password" name="password" placeholder="Enter your password" autocomplete="current-password" minlength="6" required>
+          <button type="button" class="reveal" id="revealBtn" title="Show password" aria-label="Show password">
+            <i class="fas fa-eye"></i>
+          </button>
+        </div>
+      </div>
+
+      <div id="authMessage" class="message" role="status" hidden></div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">
+        <span id="submitLabel">Sign In</span>
+      </button>
+
+      <button type="button" class="link-btn" id="resetBtn">Forgot your password?</button>
+    </form>
+
+    <div class="login-footer">
+      <span id="switchPrompt">Don't have an account?</span>
+      <button type="button" class="link-btn strong" id="switchBtn">Create one</button>
+    </div>
+  </div>
+
+  <!-- Supabase + Auth Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/login.js"></script>
+
+</body>
+</html>
