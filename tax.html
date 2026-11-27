@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" class="auth-pending">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>House Tax &middot; Urban GIS Portal</title>
+
+  <!-- Hide the page until the session check in auth-guard.js passes -->
+  <style>html.auth-pending body { visibility: hidden; }</style>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/tax.css">
+</head>
+<body class="tax-page">
+
+  <!-- Header -->
+  <div id="header">
+    <div class="header-logo">
+      <img src="assets/logo.png" alt="Manipal Logo" style="height: 50px; margin-right: 15px;">
+    </div>
+    <div class="header-title">House Tax Payment</div>
+    <div class="header-user">
+      <i class="fas fa-circle-user"></i>
+      <span id="userEmail"></span>
+      <button id="logout-btn" onclick="logout()" title="Sign out">
+        <i class="fas fa-right-from-bracket"></i> Sign Out
+      </button>
+    </div>
+  </div>
+
+  <div class="tax-scroll">
+    <div class="tax-container">
+
+      <a class="back-link" href="index.html"><i class="fas fa-arrow-left"></i> Back to Map</a>
+
+      <!-- Demonstration notice: this flow never moves money -->
+      <div class="demo-banner">
+        <i class="fas fa-triangle-exclamation"></i>
+        <div>
+          <strong>Demonstration portal — not a real tax payment service.</strong>
+          No money is transferred and this is not affiliated with any municipal
+          authority. Payments are recorded in the project database for the
+          purpose of the demo only. <strong>Do not enter real card, UPI or bank details.</strong>
+        </div>
+      </div>
+
+      <!-- Shown when the SQL migration has not been run yet -->
+      <div id="setupNotice" class="setup-notice" hidden>
+        <i class="fas fa-database"></i>
+        <div>
+          <strong>Database tables missing.</strong>
+          Run <code>sql/house_tax.sql</code> in the Supabase SQL Editor to create
+          <code>house_tax_register</code> and <code>house_tax_payment</code>, then reload.
+          <div class="setup-detail" id="setupDetail"></div>
+        </div>
+      </div>
+
+      <div id="taxBody" hidden>
+
+        <!-- Property -->
+        <section class="card">
+          <h2><i class="fas fa-house"></i> Property Details</h2>
+          <div class="detail-grid">
+            <div><span>Property ID</span><strong id="pHouseUid">—</strong></div>
+            <div><span>Locality</span><strong id="pLocality">—</strong></div>
+            <div><span>House No.</span><strong id="pHouseNo">—</strong></div>
+            <div><span>Locality Code</span><strong id="pLocalityCode">—</strong></div>
+            <div><span>Coordinates</span><strong id="pCoords">—</strong></div>
+            <div><span>Owner on record</span><strong id="pOwner">—</strong></div>
+            <div><span>Property Type</span><strong id="pType">—</strong></div>
+            <div><span>Built-up Area</span><strong id="pArea">—</strong></div>
+          </div>
+          <p class="assessment-note" id="assessmentNote"></p>
+          <button class="ghost-btn" onclick="toggleRegisterForm()">
+            <i class="fas fa-pen"></i> <span id="registerToggleLabel">Update owner &amp; assessment</span>
+          </button>
+
+          <form id="registerForm" class="register-form" hidden>
+            <div class="field">
+              <label for="ownerName">Owner name</label>
+              <input type="text" id="ownerName" placeholder="Name of the property owner">
+            </div>
+            <div class="field">
+              <label for="propertyType">Property type</label>
+              <select id="propertyType">
+                <option>Residential</option>
+                <option>Commercial</option>
+                <option>Mixed Use</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="builtUpArea">Built-up area (sq ft)</label>
+              <input type="number" id="builtUpArea" min="1" step="1" placeholder="e.g. 1200">
+            </div>
+            <button type="submit" class="primary-btn" id="saveRegisterBtn">Save assessment</button>
+          </form>
+        </section>
+
+        <!-- Demand -->
+        <section class="card">
+          <h2><i class="fas fa-file-invoice"></i> Tax Demand <span class="year-chip" id="pYear"></span></h2>
+          <table class="demand-table">
+            <tbody>
+              <tr><td>Annual Rental Value (ARV)</td><td id="dArv">—</td></tr>
+              <tr><td>House Tax <span class="muted">(12% of ARV)</span></td><td id="dHouseTax">—</td></tr>
+              <tr><td>Water &amp; Sewerage Cess <span class="muted">(7.5% of ARV)</span></td><td id="dWater">—</td></tr>
+              <tr><td>Arrears carried forward</td><td id="dArrears">—</td></tr>
+              <tr class="total"><td>Total Demand</td><td id="dTotal">—</td></tr>
+              <tr><td>Paid to date</td><td id="dPaid">—</td></tr>
+              <tr class="balance"><td>Balance Payable</td><td id="dBalance">—</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Payment -->
+        <section class="card" id="paymentCard">
+          <h2><i class="fas fa-indian-rupee-sign"></i> Make a Payment</h2>
+
+          <div id="paidInFull" class="paid-banner" hidden>
+            <i class="fas fa-circle-check"></i> This property has no outstanding balance for the current year.
+          </div>
+
+          <form id="paymentForm">
+            <div class="pay-row">
+              <div class="field">
+                <label for="payAmount">Amount (₹)</label>
+                <input type="number" id="payAmount" min="1" step="0.01" required>
+              </div>
+              <div class="field">
+                <label for="payMethod">Method</label>
+                <select id="payMethod">
+                  <option>UPI</option>
+                  <option>Net Banking</option>
+                  <option>Debit / Credit Card</option>
+                  <option>Counter (Cash)</option>
+                </select>
+              </div>
+            </div>
+            <p class="no-credentials">
+              <i class="fas fa-shield-halved"></i>
+              No card, UPI or bank credentials are collected — the method above is
+              recorded as a label only.
+            </p>
+            <div id="payMessage" class="pay-message" role="status" hidden></div>
+            <button type="submit" class="primary-btn pay-btn" id="payBtn">
+              Record Demo Payment
+            </button>
+          </form>
+        </section>
+
+        <!-- Receipt -->
+        <section class="card receipt" id="receiptCard" hidden>
+          <h2><i class="fas fa-receipt"></i> Payment Receipt</h2>
+          <div class="receipt-watermark">DEMO</div>
+          <div class="detail-grid">
+            <div><span>Receipt No.</span><strong id="rNo">—</strong></div>
+            <div><span>Date</span><strong id="rDate">—</strong></div>
+            <div><span>Property ID</span><strong id="rHouse">—</strong></div>
+            <div><span>Amount</span><strong id="rAmount">—</strong></div>
+            <div><span>Method</span><strong id="rMethod">—</strong></div>
+            <div><span>Paid by</span><strong id="rPayer">—</strong></div>
+          </div>
+          <button class="ghost-btn" onclick="window.print()"><i class="fas fa-print"></i> Print receipt</button>
+        </section>
+
+        <!-- History -->
+        <section class="card">
+          <h2><i class="fas fa-clock-rotate-left"></i> Payment History</h2>
+          <div id="historyContainer"><p class="muted">Loading…</p></div>
+        </section>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabase-config.js"></script>
+  <script src="js/auth-guard.js"></script>
+  <script src="js/tax.js"></script>
+
+</body>
+</html>

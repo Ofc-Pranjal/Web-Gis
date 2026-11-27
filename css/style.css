@@ -477,6 +477,26 @@ body {
       font-weight: bold;
     }
 
+    /* Key/value rows used by the house popup */
+    .ol-popup .popup-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 5px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+
+    .ol-popup .popup-row span {
+      color: #8c9bba;
+      font-size: 12px;
+    }
+
+    .ol-popup .popup-row strong {
+      color: #1c2537;
+      font-size: 12.5px;
+      text-align: right;
+    }
+
     .ol-popup::-webkit-scrollbar { width: 6px; }
     .ol-popup::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
 

@@ -49,7 +49,9 @@ const layerGroups = [
     color: "#b5179e",
     layers: [
       { id: "allahabad_parcels_1989", name: "Parcels 1989", color: "#b5179e" },
-      { id: "allahabad_parcels_2009", name: "Parcels 2009", color: "#7209b7" }
+      // Each row is a locality holding one MultiPoint of houses; `houses` splits
+      // it into individually clickable features so a single house can be taxed.
+      { id: "allahabad_parcels_2009", name: "Parcels 2009 (Houses)", color: "#7209b7", houses: true }
     ]
   },
   {
@@ -130,6 +132,44 @@ map.addControl(new ol.control.ScaleLine({
 
 const layerContainer = document.getElementById("layerContainer");
 
+// A parcel row stores one MultiPoint per locality, so OpenLayers would hand back
+// the whole locality on click. Split each point into its own feature with a
+// stable house id ("<localityId>-<n>") that the tax page keys off.
+function explodeHouses(features) {
+  const houses = [];
+
+  features.forEach(feature => {
+    const geometry = feature.getGeometry();
+    const localityId = feature.get('id');
+    const localityName = feature.get('name') || 'Unnamed';
+
+    if (!geometry || typeof geometry.getPoints !== 'function') {
+      houses.push(feature);
+      return;
+    }
+
+    geometry.getPoints().forEach((point, index) => {
+      const houseNo = index + 1;
+      const uid = `${localityId}-${houseNo}`;
+      const [lon, lat] = ol.proj.toLonLat(point.getCoordinates());
+
+      const house = new ol.Feature({ geometry: point });
+      house.setId(uid);
+      house.setProperties({
+        house_uid: uid,
+        house_no: houseNo,
+        locality_id: localityId,
+        locality_name: localityName,
+        lon: lon.toFixed(6),
+        lat: lat.toFixed(6)
+      });
+      houses.push(house);
+    });
+  });
+
+  return houses;
+}
+
 layerConfig.forEach((item) => {
   const vectorSource = new ol.source.Vector({
     format: new ol.format.GeoJSON({ featureProjection: 'EPSG:3857' }),
@@ -147,10 +187,13 @@ layerConfig.forEach((item) => {
         })
         .then(data => {
           const format = new ol.format.GeoJSON();
-          const features = format.readFeatures(data, {
+          let features = format.readFeatures(data, {
             dataProjection: 'EPSG:4326',
             featureProjection: 'EPSG:3857'
           });
+
+          if (item.houses) features = explodeHouses(features);
+
           vectorSource.addFeatures(features);
           success(features);
 
@@ -297,19 +340,38 @@ map.on('singleclick', function (evt) {
     });
     window.selectedLayerId = layerId;
 
-    let html = `<b>Edit ${layerId || 'Feature'}</b><hr>`;
-    Object.keys(props).forEach(k => {
-      if (k === 'geometry') return;
-      html += `<label>${k}</label><input type="text" id="${k}" value="${props[k] || ''}">`;
-    });
-    html += `<button onclick="saveFeature()">Save</button>`;
+    let html;
+
+    if (props.house_uid) {
+      // Exploded house point — offer the tax page rather than an attribute edit.
+      html = `
+        <b>House ${props.house_uid}</b><hr>
+        <div class="popup-row"><span>Locality</span><strong>${props.locality_name}</strong></div>
+        <div class="popup-row"><span>House No.</span><strong>${props.house_no}</strong></div>
+        <div class="popup-row"><span>Coordinates</span><strong>${props.lat}, ${props.lon}</strong></div>
+        <button onclick="openTaxPage('${props.house_uid}')">
+          <i class="fas fa-file-invoice-dollar"></i> View / Pay House Tax
+        </button>
+      `;
+    } else {
+      html = `<b>Edit ${layerId || 'Feature'}</b><hr>`;
+      Object.keys(props).forEach(k => {
+        if (k === 'geometry') return;
+        html += `<label>${k}</label><input type="text" id="${k}" value="${props[k] || ''}">`;
+      });
+      html += `<button onclick="saveFeature()">Save</button>`;
+    }
 
     popupElement.innerHTML = html;
     popup.setPosition(evt.coordinate);
   });
 });
 
-// Sidebar 
+function openTaxPage(houseUid) {
+  window.location.href = `tax.html?house=${encodeURIComponent(houseUid)}`;
+}
+
+// Sidebar
 function toggleMenu(id, element) {
   const container = document.getElementById(id);
   const icon = element.querySelector('.chevron');
